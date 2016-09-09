@@ -3,6 +3,8 @@ package com.dev.illiaka;
 import com.dev.illiaka.Tests.FakeData;
 import com.dev.illiaka.Tests.Product;
 import javafx.application.Application;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -26,6 +28,8 @@ import java.util.List;
  */
 public class SimulatorScene extends Application{
 
+    private static final String DOMINATION_IS_NOT_CORRECT = "inserted value is not correct!";
+    private static final String PICK_ITEM_FIRST = "pick item first!";
     ListView<HBoxCell> listView;
 
     Button cancelButton;
@@ -34,9 +38,11 @@ public class SimulatorScene extends Application{
     TextField insertedMoneyTextField;
 
     Label errorLabel;
-    Label youPickedLabel;
-    Label itCostsLabel;
-    Label insertedMoneylabel;
+    Label pickedItemTypeLabel;
+    Label pickedItemPriceLabel;
+    Label insertedMoneyLabel;
+    Label neededMoneyLabel;
+    Label changeLabel;
 
     private static final String PRIMARY_STAGE_TITLE = "Vending Machine Simulator";
 
@@ -56,16 +62,9 @@ public class SimulatorScene extends Application{
 
         Scene scene = new Scene(root);
 
-
         primaryStage.setScene(scene);
         primaryStage.setResizable(false);
         primaryStage.setTitle(PRIMARY_STAGE_TITLE);
-
-        /**
-         * set styles to scene
-         * @see /resources/style.css
-         */
-        scene.getStylesheets().add("style.css");
 
 
         primaryStage.show();
@@ -74,13 +73,23 @@ public class SimulatorScene extends Application{
 
         populateProductsIntoListView();
 
+
+        listView.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<HBoxCell>() {
+            public void changed(ObservableValue<? extends HBoxCell> observable, HBoxCell oldValue, HBoxCell newValue) {
+
+                pickedItemTypeLabel.setText(newValue.productType.getText());
+                pickedItemPriceLabel.setText(newValue.productPrice.getText());
+
+            }
+        });
+
         // button actions
         cancelButton.setOnAction(new EventHandler<ActionEvent>() {
             public void handle(ActionEvent event) {
 
                 // return inserted money
-                // clear you picked field
-                // clear it costs field
+                pickedItemTypeLabel.setText("");
+                pickedItemPriceLabel.setText("");
 
             }
         });
@@ -88,30 +97,115 @@ public class SimulatorScene extends Application{
         insertButton.setOnAction(new EventHandler<ActionEvent>() {
             public void handle(ActionEvent event) {
 
-                // check if inputed value is correct
-                // set error label if not
+                String insertedMoney = insertedMoneyTextField.getText();
+                // check if inserted value is correct
+                if (checkIsDenominationCorrect(insertedMoney)){
+
+                    switch (insertedMoney){
+
+                        case "5":
+                            System.out.println("5");
+                            addInsertedMoneyToWalletAndLabel(insertedMoney);
+                            break;
+                        case "2":
+                            System.out.println("2");
+                            addInsertedMoneyToWalletAndLabel(insertedMoney);
+                            break;
+                        case "1":
+                            System.out.println("1");
+                            addInsertedMoneyToWalletAndLabel(insertedMoney);
+                            break;
+                        case "0.5":
+                            System.out.println("0.5");
+                            addInsertedMoneyToWalletAndLabel(insertedMoney);
+                            break;
+                        case "0.2":
+                            System.out.println("0.2");
+                            addInsertedMoneyToWalletAndLabel(insertedMoney);
+                            break;
+                        case "0.1":
+                            System.out.println("0.1");
+                            addInsertedMoneyToWalletAndLabel(insertedMoney);
+                            break;
+                        default:
+                            errorLabel.setText(DOMINATION_IS_NOT_CORRECT);
+
+                    }
+
+                }else {
+                    errorLabel.setText(DOMINATION_IS_NOT_CORRECT);
+                }
+
                 // add inserted denomination to machine wallet
                 // add value to inserted money
-                //
+
 
             }
         });
 
+    }
 
+    private void addInsertedMoneyToWalletAndLabel(String insertedMoneyString) {
+
+        Double tempMoneyValue;
+
+
+        // check if product is chosen
+        if ("".equals(pickedItemPriceLabel.getText())) {
+            errorLabel.setText(PICK_ITEM_FIRST);
+        }else {
+
+            // fill inserted money label
+
+            tempMoneyValue = Double.parseDouble(insertedMoneyLabel.getText()) + Double.parseDouble(insertedMoneyString);
+            insertedMoneyLabel.setText("" + tempMoneyValue);
+
+
+            // fill needed money label
+
+            if ("".equals(neededMoneyLabel.getText())){
+
+                neededMoneyLabel.setText("" + (Double.parseDouble(pickedItemPriceLabel.getText().replace('$', Character.MIN_VALUE))
+                        - Double.parseDouble(insertedMoneyString)));
+            }else {
+
+                tempMoneyValue = Double.parseDouble(neededMoneyLabel.getText()) - Double.parseDouble(insertedMoneyString);
+
+                if (tempMoneyValue < 0){
+                    changeLabel.setText("" + Math.abs(tempMoneyValue));
+                    neededMoneyLabel.setText("0");
+                    insertButton.setDisable(true);
+                }else{
+                    neededMoneyLabel.setText("" + tempMoneyValue);
+                }
+
+            }
+
+        }
+
+    }
+
+    private boolean checkIsDenominationCorrect(String text) {
+
+        if ( !("".equals(text) && text.matches("-?\\d(\\.\\d)?")) ){
+            return true;
+        }
+        return false;
     }
 
     private void findControls(Scene scene) {
 
         listView = (ListView<HBoxCell>) scene.lookup("#products_listview");
 
-        cancelButton = (Button) scene.lookup("#cancel_button") ;
+        cancelButton = (Button) scene.lookup("#cancel_button");
         insertButton = (Button) scene.lookup("#insert_money_button");
         insertedMoneyTextField = (TextField) scene.lookup("#inserted_money_textField");
         errorLabel = (Label) scene.lookup("#error_label");
-        youPickedLabel = (Label) scene.lookup("#picked_item");
-        insertedMoneylabel = (Label) scene.lookup("#inserted_money_label");
-        itCostsLabel = (Label) scene.lookup("#picked_item_price");
-
+        pickedItemTypeLabel = (Label) scene.lookup("#picked_item");
+        insertedMoneyLabel = (Label) scene.lookup("#inserted_money_label");
+        neededMoneyLabel = (Label) scene.lookup("#needed_money_label");
+        pickedItemPriceLabel = (Label) scene.lookup("#picked_item_price");
+        changeLabel = (Label) scene.lookup("#change_label");
 
     }
 
@@ -124,7 +218,7 @@ public class SimulatorScene extends Application{
         List<HBoxCell> list = new ArrayList<HBoxCell>();
 
         for (int i = 0; i < p.size(); i++) {
-            list.add(new HBoxCell(p.get(i).getType(), p.get(i).getPrice() + "$"));
+            list.add(new HBoxCell (p.get(i).getType(), new Double(10) + "$"));
         }
 
         ObservableList<HBoxCell> myObservableList = FXCollections.observableList(list);
@@ -134,20 +228,22 @@ public class SimulatorScene extends Application{
 
     private class HBoxCell extends HBox {
 
-        Label label = new Label();
-        Button button = new Button();
+        Label productType = new Label();
+        Label productPrice = new Label();
 
-        HBoxCell(String labelText, String buttonText) {
+        HBoxCell(String productTypeText, String productPriceText) {
             super();
 
-            label.setText(labelText);
-            label.setMaxWidth(Double.MAX_VALUE);
+            productType.setText(productTypeText);
+            productType.setMaxWidth(Double.MAX_VALUE);
 
-            HBox.setHgrow(label, Priority.ALWAYS);
+            productPrice.setText(productPriceText);
+            productPrice.setMaxWidth(Double.MAX_VALUE);
 
-            button.setText(buttonText);
+            HBox.setHgrow(productType, Priority.ALWAYS);
 
-            this.getChildren().addAll(label, button);
+
+            this.getChildren().addAll(productType, productPrice);
         }
 
     }

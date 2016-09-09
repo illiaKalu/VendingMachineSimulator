@@ -27,7 +27,7 @@ public class FakeData {
 
         for (int i = 0; i < 45; i ++){
 
-            products.add(new Product("Cola dring", "" + r.nextDouble(), "" + r.nextInt()));
+            products.add(new Product("Cola dring", "" + r.nextInt(), "" + r.nextInt()));
 
         }
 
