@@ -46,7 +46,17 @@ public class SimulatorScene extends Application{
 
     private static final String PRIMARY_STAGE_TITLE = "Vending Machine Simulator";
 
+    // each cell represent available denomination
+    // eg [0] - 5 denomination
+    // [1] - 2 denomination
+    // [5] - 0.1 denomination
+    int[] tempUserMoneyInsertion = new int[6];
+
+    Double insertedMoney;
+    Double neededMoney;
+
     public static void main(String[] args) {
+
         launch(args);
     }
 
@@ -95,45 +105,80 @@ public class SimulatorScene extends Application{
         });
 
         insertButton.setOnAction(new EventHandler<ActionEvent>() {
+
             public void handle(ActionEvent event) {
 
+                // clear error message
+                errorLabel.setText("");
+
                 String insertedMoney = insertedMoneyTextField.getText();
-                // check if inserted value is correct
-                if (checkIsDenominationCorrect(insertedMoney)){
 
-                    switch (insertedMoney){
+                // check is any product chosen
+                if (isProductChosen()){
 
-                        case "5":
-                            System.out.println("5");
-                            addInsertedMoneyToWalletAndLabel(insertedMoney);
-                            break;
-                        case "2":
-                            System.out.println("2");
-                            addInsertedMoneyToWalletAndLabel(insertedMoney);
-                            break;
-                        case "1":
-                            System.out.println("1");
-                            addInsertedMoneyToWalletAndLabel(insertedMoney);
-                            break;
-                        case "0.5":
-                            System.out.println("0.5");
-                            addInsertedMoneyToWalletAndLabel(insertedMoney);
-                            break;
-                        case "0.2":
-                            System.out.println("0.2");
-                            addInsertedMoneyToWalletAndLabel(insertedMoney);
-                            break;
-                        case "0.1":
-                            System.out.println("0.1");
-                            addInsertedMoneyToWalletAndLabel(insertedMoney);
-                            break;
-                        default:
-                            errorLabel.setText(DOMINATION_IS_NOT_CORRECT);
+                    // check if inserted value is correct
+                    if (checkIsDenominationCorrect(insertedMoney)){
 
+                        setInsertedMoneyLabel(insertedMoney);
+
+
+                        switch (insertedMoney){
+
+                            case "5":
+                                System.out.println("5");
+                                tempUserMoneyInsertion[0] += 1;
+                                break;
+                            case "2":
+                                System.out.println("2");
+                                tempUserMoneyInsertion[1] += 1;
+                                break;
+                            case "1":
+                                System.out.println("1");
+                                tempUserMoneyInsertion[2] += 1;
+                                break;
+                            case "0.5":
+                                System.out.println("0.5");
+                                tempUserMoneyInsertion[3] += 1;
+                                break;
+                            case "0.2":
+                                System.out.println("0.2");
+                                tempUserMoneyInsertion[4] += 1;
+                                break;
+                            case "0.1":
+                                System.out.println("0.1");
+                                tempUserMoneyInsertion[5] += 1;
+                                break;
+                            default:
+                                errorLabel.setText(DOMINATION_IS_NOT_CORRECT);
+                        }
+
+                        // calculate how much money user need to add and set responsible Label
+                        setNeededMoneyLabel(insertedMoney);
+
+
+                        // check is inserted money enough
+                        // 0 - no change, give product
+                        // 1 - user inserted not enough money
+                        // -1 - with change
+                        switch (isMoneyEnough()){
+
+                            case 1:
+                                System.out.println("not enough");
+                                break;
+                            case 0:
+                                System.out.println("no change");
+                                break;
+                            case -1:
+                                System.out.println("give change");
+                        }
+
+
+                    }else{
+                        errorLabel.setText(DOMINATION_IS_NOT_CORRECT);
                     }
 
                 }else {
-                    errorLabel.setText(DOMINATION_IS_NOT_CORRECT);
+                    errorLabel.setText(PICK_ITEM_FIRST);
                 }
 
                 // add inserted denomination to machine wallet
@@ -145,49 +190,48 @@ public class SimulatorScene extends Application{
 
     }
 
-    private void addInsertedMoneyToWalletAndLabel(String insertedMoneyString) {
+    // get previous value of inserted money label and add to it new value
+    private void setInsertedMoneyLabel(String insertedMoneyString) {
+        insertedMoney = Double.parseDouble(insertedMoneyLabel.getText()) +
+                Double.parseDouble(insertedMoneyString);
 
-        Double tempMoneyValue;
+        insertedMoneyLabel.setText(String.format("%.2f", insertedMoney));
 
+    }
 
-        // check if product is chosen
-        if ("".equals(pickedItemPriceLabel.getText())) {
-            errorLabel.setText(PICK_ITEM_FIRST);
-        }else {
+    private void setNeededMoneyLabel(String insertedMoneyString) {
 
-            // fill inserted money label
-
-            tempMoneyValue = Double.parseDouble(insertedMoneyLabel.getText()) + Double.parseDouble(insertedMoneyString);
-            insertedMoneyLabel.setText("" + tempMoneyValue);
-
-
-            // fill needed money label
-
+        // if user inserted first denomination
+        // get product price and sub inserted money
             if ("".equals(neededMoneyLabel.getText())){
 
-                neededMoneyLabel.setText("" + (Double.parseDouble(pickedItemPriceLabel.getText().replace('$', Character.MIN_VALUE))
-                        - Double.parseDouble(insertedMoneyString)));
+                neededMoney = Double.parseDouble(pickedItemPriceLabel.getText().replace('$', Character.MIN_VALUE))
+                        - Double.parseDouble(insertedMoneyString);
+
+                neededMoneyLabel.setText(String.format("%.2f", neededMoney));
             }else {
 
-                tempMoneyValue = Double.parseDouble(neededMoneyLabel.getText()) - Double.parseDouble(insertedMoneyString);
+         //else - get previous value and sub inserted money from it
+                neededMoney = Double.parseDouble(neededMoneyLabel.getText()) - Double.parseDouble(insertedMoneyString);
 
-                if (tempMoneyValue < 0){
-                    changeLabel.setText("" + Math.abs(tempMoneyValue));
+                // if there is enough money - set responsible label
+                if (neededMoney < 0){
+                    changeLabel.setText("" + Math.abs(neededMoney));
                     neededMoneyLabel.setText("0");
                     insertButton.setDisable(true);
                 }else{
-                    neededMoneyLabel.setText("" + tempMoneyValue);
+                    neededMoneyLabel.setText(String.format("%.2f", neededMoney));
                 }
 
             }
 
-        }
+
 
     }
 
     private boolean checkIsDenominationCorrect(String text) {
 
-        if ( !("".equals(text) && text.matches("-?\\d(\\.\\d)?")) ){
+        if ( !( "".equals(text) || !text.matches("(5|2|1|0.5|0.2|0.1)")) ){
             return true;
         }
         return false;
@@ -224,6 +268,22 @@ public class SimulatorScene extends Application{
         ObservableList<HBoxCell> myObservableList = FXCollections.observableList(list);
         listView.setItems(myObservableList);
 
+    }
+
+    public boolean isProductChosen() {
+        return !"".equals(pickedItemPriceLabel.getText());
+    }
+
+    public int isMoneyEnough() {
+
+        if ( neededMoney < 0) {
+            return -1;
+        }
+        if ( neededMoney == 0) {
+            return 0;
+        }
+
+        return 1;
     }
 
     private class HBoxCell extends HBox {

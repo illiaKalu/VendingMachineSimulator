@@ -26,7 +26,10 @@
                   <Label layoutX="21.0" layoutY="264.0" text="Valid Money Values: " />
                   <Label layoutX="21.0" layoutY="285.0" prefHeight="15.0" prefWidth="148.0" text="5, 2, 1, 0.5, 0.2, 0.1 $" />
                   <Button id="cancel_button" layoutX="76.0" layoutY="464.0" mnemonicParsing="false" text="Cancel" />
-                  <Label id="error_label" layoutX="14.0" layoutY="472.0" />
+                  <Label id="error_label" layoutX="18.0" layoutY="503.0" prefHeight="98.0" prefWidth="179.0" textFill="#f50808">
+                     <font>
+                        <Font size="20.0" />
+                     </font></Label>
                   <Label layoutX="21.0" layoutY="359.0" text="You inserted : " />
                   <Label id="inserted_money_label" layoutX="121.0" layoutY="359.0" text="0" />
                   <Label layoutX="21.0" layoutY="384.0" text="You need :" />
