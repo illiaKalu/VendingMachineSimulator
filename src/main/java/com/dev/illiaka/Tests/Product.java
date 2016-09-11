@@ -13,7 +13,7 @@ public class Product {
         this.type = type;
     }
 
-    public Product(String type, String price, String amount) {
+    public Product(String type, String price, int amount) {
         this.type = type;
         this.price = price;
         this.amount = amount;
@@ -28,16 +28,16 @@ public class Product {
         this.price = price;
     }
 
-    public String getAmount() {
+    public int getAmount() {
         return amount;
     }
 
-    public void setAmount(String amount) {
+    public void setAmount(int amount) {
         this.amount = amount;
     }
 
     String type;
     String price;
-    String amount;
+    int amount;
 
 }

@@ -2,11 +2,11 @@ package com.dev.illiaka;
 
 import com.dev.illiaka.Tests.FakeData;
 import com.dev.illiaka.Tests.Product;
+import com.dev.illiaka.Utils.JSONParser;
 import javafx.application.Application;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
@@ -18,14 +18,18 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TimerTask;
 
 /**
- * Created by sonicmaster on 09.09.16.
+ * Created by sonicmaster on 09.09.16.\
+ * The class represents behavior of Vending Machine.
+ * Data like products and denominations comes from GAE server
+ * Internet connection needed
+ *
  */
 public class SimulatorScene extends Application {
 
@@ -33,46 +37,49 @@ public class SimulatorScene extends Application {
     private static final String PICK_ITEM_FIRST = "pick item first!";
     private static final String SUCCESS_NO_CHANGE = "Thank you, take your product";
     private static final String PRIMARY_STAGE_TITLE = "Vending Machine Simulator";
-    ListView<HBoxCell> listView;
-    Button cancelButton;
-    Button insertButton;
-    TextField insertedMoneyTextField;
-    Label messageLabel;
-    Label pickedItemTypeLabel;
-    Label pickedItemPriceLabel;
-    Label insertedMoneyLabel;
-    Label neededMoneyLabel;
-    Label changeLabel;
+    private static final String NO_MORE_PRODUCTS = "Sorry, product is gone";
+
+    private ListView<ProductsController> listView;
+    private Button cancelButton;
+    private Button insertButton;
+    private TextField insertedMoneyTextField;
+    private Label messageLabel;
+    private Label pickedItemTypeLabel;
+    private Label pickedItemPriceLabel;
+    private Label insertedMoneyLabel;
+    private Label neededMoneyLabel;
+    private Label changeLabel;
+
     // each cell represent available denomination
-    // eg [0] - 5 denomination
+    // eg. [0] - 5 denomination
     // [1] - 2 denomination
     // [5] - 0.1 denomination
-    int[] tempUserMoneyInsertion = new int[6];
+    private int[] tempUserMoneyInsertion = new int[6];
 
-    Double insertedMoneyValue;
-    Double neededMoneyValue;
+    private Double insertedMoneyValue;
+    private Double neededMoneyValue;
 
     public static void main(String[] args) {
 
         launch(args);
+
     }
 
     public void start(Stage primaryStage) throws Exception {
 
-        // primary Scene implementation
+         // primary Scene implementation
         // markup file location
         String fxmlSceneMarkupFile = "/scenes/primaryScene.fxml";
 
         // loads scene from fxml file in resources
         FXMLLoader loader = new FXMLLoader();
-        Parent root = (Parent) loader.load(getClass().getResourceAsStream(fxmlSceneMarkupFile));
+        Parent root = loader.load(getClass().getResourceAsStream(fxmlSceneMarkupFile));
 
         Scene scene = new Scene(root);
 
         primaryStage.setScene(scene);
         primaryStage.setResizable(false);
         primaryStage.setTitle(PRIMARY_STAGE_TITLE);
-
 
         primaryStage.show();
 
@@ -81,18 +88,34 @@ public class SimulatorScene extends Application {
         populateProductsIntoListView();
 
 
-        listView.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<HBoxCell>() {
-            public void changed(ObservableValue<? extends HBoxCell> observable, HBoxCell oldValue, HBoxCell newValue) {
+        listView.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<ProductsController>() {
+            public void changed(ObservableValue<? extends ProductsController> observable, ProductsController oldValue, ProductsController newValue) {
 
-                pickedItemTypeLabel.setText(newValue.productType.getText());
-                pickedItemPriceLabel.setText(newValue.productPrice.getText());
+                System.out.println("amount of chosen product - " + newValue.getProductAmount());
 
-                // activate buttons
-                insertButton.setDisable(false);
-                cancelButton.setDisable(false);
+                // check product availability
+                if (newValue.getProductAmount() < 1){
+                    messageLabel.setText(NO_MORE_PRODUCTS);
+                    neededMoneyLabel.setText("");
 
-                // clear message label
-                messageLabel.setText("");
+                    insertButton.setDisable(true);
+                    cancelButton.setDisable(true);
+                }else {
+
+                    newValue.setProductAmount(newValue.getProductAmount() - 1);
+
+                    neededMoneyLabel.setText("" + newValue.getProductPrice());
+                    changeLabel.setText("");
+                    pickedItemTypeLabel.setText(newValue.getProductType());
+                    pickedItemPriceLabel.setText("" + newValue.getProductPrice());
+
+                    // activate buttons
+                    insertButton.setDisable(false);
+                    cancelButton.setDisable(false);
+
+                    // clear message label
+                    messageLabel.setText("");
+                }
             }
         });
 
@@ -103,6 +126,9 @@ public class SimulatorScene extends Application {
                 // return inserted money
                 pickedItemTypeLabel.setText("");
                 pickedItemPriceLabel.setText("");
+
+                listView.setDisable(false);
+
 
             }
         });
@@ -123,6 +149,7 @@ public class SimulatorScene extends Application {
                     if (checkIsDenominationCorrect(insertedMoney)) {
 
                         setInsertedMoneyLabel(insertedMoney);
+                        listView.setDisable(true);
 
 
                         switch (insertedMoney) {
@@ -156,7 +183,7 @@ public class SimulatorScene extends Application {
                         }
 
                         // calculate how much money user need to add and set responsible Label
-                        setneededMoneyLabel(insertedMoney);
+                        setNeededMoneyLabel(insertedMoney);
 
 
                         // check is inserted money enough
@@ -170,6 +197,9 @@ public class SimulatorScene extends Application {
                                 break;
                             case 0:
 
+                                // TODO: Decrease product from products list
+
+
                                 // reset fields and labels for next user
                                 insertedMoneyValue = 0d;
                                 neededMoneyValue = 0d;
@@ -177,6 +207,7 @@ public class SimulatorScene extends Application {
                                 insertedMoneyLabel.setText("0");
                                 neededMoneyLabel.setText("");
 
+                                listView.setDisable(false);
 
                                 // no change, give product, make buttons states react properly
                                 messageLabel.setText(SUCCESS_NO_CHANGE);
@@ -185,6 +216,12 @@ public class SimulatorScene extends Application {
                                 insertButton.setDisable(true);
                                 break;
                             case -1:
+
+                                insertedMoneyLabel.setText("0");
+                                neededMoneyLabel.setText("");
+                                listView.setDisable(false);
+
+
                                 System.out.println("give change");
                         }
 
@@ -211,30 +248,30 @@ public class SimulatorScene extends Application {
 
     }
 
-    private void setneededMoneyLabel(String insertedMoneyString) {
+    private void setNeededMoneyLabel(String insertedMoneyString) {
 
         // if user inserted first denomination
         // get product price and sub inserted money
-        if ("".equals(neededMoneyLabel.getText())) {
+//        if ("".equals(neededMoneyLabel.getText())) {
+//
+//            neededMoneyValue = Double.parseDouble(pickedItemPriceLabel.getText().replace('$', Character.MIN_VALUE))
+//                    - Double.parseDouble(insertedMoneyString);
 
-            neededMoneyValue = Double.parseDouble(pickedItemPriceLabel.getText().replace('$', Character.MIN_VALUE))
-                    - Double.parseDouble(insertedMoneyString);
+            //neededMoneyLabel.setText(String.format("%.2f", neededMoneyValue));
+       // } else {
 
-            neededMoneyLabel.setText(String.format("%.2f", neededMoneyValue));
-        } else {
-
-            //else - get previous value and sub inserted money from it
+            //get previous value and sub inserted money from it
             neededMoneyValue = Double.parseDouble(neededMoneyLabel.getText()) - Double.parseDouble(insertedMoneyString);
 
-            // if there is enough money - set responsible label
-            if (neededMoneyValue < 0) {
-                changeLabel.setText(String.format("%.2f", Math.abs(neededMoneyValue)) );
-                neededMoneyLabel.setText("0");
-                insertButton.setDisable(true);
-            } else {
-                neededMoneyLabel.setText(String.format("%.2f", neededMoneyValue));
-            }
+       // }
 
+        // if there is enough money - set responsible label
+        if (neededMoneyValue < 0) {
+            changeLabel.setText(String.format("%.2f", Math.abs(neededMoneyValue)) );
+            neededMoneyLabel.setText("0");
+            insertButton.setDisable(true);
+        } else {
+            neededMoneyLabel.setText(String.format("%.2f", neededMoneyValue));
         }
 
 
@@ -242,15 +279,12 @@ public class SimulatorScene extends Application {
 
     private boolean checkIsDenominationCorrect(String text) {
 
-        if (!("".equals(text) || !text.matches("(5|2|1|0.5|0.2|0.1)"))) {
-            return true;
-        }
-        return false;
+        return !("".equals(text) || !text.matches("(5|2|1|0.5|0.2|0.1)"));
     }
 
     private void findControls(Scene scene) {
 
-        listView = (ListView<HBoxCell>) scene.lookup("#products_listview");
+        listView = (ListView<ProductsController>) scene.lookup("#products_listview");
 
         cancelButton = (Button) scene.lookup("#cancel_button");
         insertButton = (Button) scene.lookup("#insert_money_button");
@@ -266,26 +300,15 @@ public class SimulatorScene extends Application {
 
     private void populateProductsIntoListView() {
 
-
-        ArrayList<Product> p = FakeData.fakeProducts();
-
-
-        List<HBoxCell> list = new ArrayList<HBoxCell>();
-
-        for (int i = 0; i < p.size(); i++) {
-            list.add(new HBoxCell(p.get(i).getType(), new Double(10) + "$"));
-        }
-
-        ObservableList<HBoxCell> myObservableList = FXCollections.observableList(list);
-        listView.setItems(myObservableList);
+        listView.setItems(FXCollections.observableList(JSONParser.parseJson("")));
 
     }
 
-    public boolean isProductChosen() {
+    private boolean isProductChosen() {
         return !"".equals(pickedItemPriceLabel.getText());
     }
 
-    public int isMoneyEnough() {
+    private int isMoneyEnough() {
 
         if (neededMoneyValue < 0) {
             return -1;
@@ -297,25 +320,4 @@ public class SimulatorScene extends Application {
         return 1;
     }
 
-    private class HBoxCell extends HBox {
-
-        Label productType = new Label();
-        Label productPrice = new Label();
-
-        HBoxCell(String productTypeText, String productPriceText) {
-            super();
-
-            productType.setText(productTypeText);
-            productType.setMaxWidth(Double.MAX_VALUE);
-
-            productPrice.setText(productPriceText);
-            productPrice.setMaxWidth(Double.MAX_VALUE);
-
-            HBox.setHgrow(productType, Priority.ALWAYS);
-
-
-            this.getChildren().addAll(productType, productPrice);
-        }
-
-    }
 }

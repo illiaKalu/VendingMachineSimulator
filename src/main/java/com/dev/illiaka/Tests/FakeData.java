@@ -15,7 +15,7 @@ public class FakeData {
         int[] fakeDenominationsArray = new int[6];
 
         for (int i = 0; i < fakeDenominationsArray.length; i++) {
-            fakeDenominationsArray[i] = r.nextInt(20);
+            fakeDenominationsArray[i] = r.nextInt(5);
         }
         return fakeDenominationsArray;
 
@@ -27,7 +27,7 @@ public class FakeData {
 
         for (int i = 0; i < 45; i ++){
 
-            products.add(new Product("Cola dring", "" + r.nextInt(), "" + r.nextInt()));
+            products.add(new Product("Cola drink" + r.nextInt(), "" + (r.nextInt(10) + 1), r.nextInt(5)));
 
         }
 

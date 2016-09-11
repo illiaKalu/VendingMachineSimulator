@@ -19,8 +19,6 @@ public class Wallet {
 
     private Double money;
 
-
-
     private static volatile Wallet instance;
 
     private Wallet() {}
