@@ -1,8 +1,10 @@
-package com.dev.illiaka;
+package com.dev.illiaka.Scenes;
 
-import com.dev.illiaka.Tests.FakeData;
-import com.dev.illiaka.Tests.Product;
+
+import com.dev.illiaka.ProductsController;
+import com.dev.illiaka.Utils.ChangeCalculator;
 import com.dev.illiaka.Utils.JSONParser;
+import com.dev.illiaka.Wallet;
 import javafx.application.Application;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -21,6 +23,7 @@ import javafx.scene.layout.Priority;
 import javafx.stage.Stage;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.TimerTask;
 
@@ -29,16 +32,17 @@ import java.util.TimerTask;
  * The class represents behavior of Vending Machine.
  * Data like products and denominations comes from GAE server
  * Internet connection needed
- *
  */
 public class SimulatorScene extends Application {
 
     private static final String DOMINATION_IS_NOT_CORRECT = "inserted value is not correct!";
     private static final String PICK_ITEM_FIRST = "pick item first!";
-    private static final String SUCCESS_NO_CHANGE = "Thank you, take your product";
+    private static final String SUCCESS_BUY = "Thank you, take your product";
     private static final String PRIMARY_STAGE_TITLE = "Vending Machine Simulator";
     private static final String NO_MORE_PRODUCTS = "Sorry, product is gone";
-
+    private static final String CAN_NOT_GIVE_CHANGE = "Sorry, change can not be given";
+    // temp variable to handle chosen product
+    volatile ProductsController chosenProduct;
     private ListView<ProductsController> listView;
     private Button cancelButton;
     private Button insertButton;
@@ -55,7 +59,6 @@ public class SimulatorScene extends Application {
     // [1] - 2 denomination
     // [5] - 0.1 denomination
     private int[] tempUserMoneyInsertion = new int[6];
-
     private Double insertedMoneyValue;
     private Double neededMoneyValue;
 
@@ -67,7 +70,7 @@ public class SimulatorScene extends Application {
 
     public void start(Stage primaryStage) throws Exception {
 
-         // primary Scene implementation
+        // primary Scene implementation
         // markup file location
         String fxmlSceneMarkupFile = "/scenes/primaryScene.fxml";
 
@@ -85,29 +88,37 @@ public class SimulatorScene extends Application {
 
         findControls(scene);
 
+        // start "loading" view here and wait until Http and parser finish
+
+        // products list initialization
+        // should be in other thread
         populateProductsIntoListView();
+
+        // wallet initialization
+        // should be in other thread
+        populateWalletWithDenominations();
 
 
         listView.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<ProductsController>() {
             public void changed(ObservableValue<? extends ProductsController> observable, ProductsController oldValue, ProductsController newValue) {
 
-                System.out.println("amount of chosen product - " + newValue.getProductAmount());
+                chosenProduct = newValue;
 
                 // check product availability
-                if (newValue.getProductAmount() < 1){
+                if (chosenProduct.getProductAmount() < 1) {
                     messageLabel.setText(NO_MORE_PRODUCTS);
                     neededMoneyLabel.setText("");
 
                     insertButton.setDisable(true);
                     cancelButton.setDisable(true);
-                }else {
+                } else {
 
-                    newValue.setProductAmount(newValue.getProductAmount() - 1);
+                    //newValue.setProductAmount(newValue.getProductAmount() - 1);
 
-                    neededMoneyLabel.setText("" + newValue.getProductPrice());
+                    neededMoneyLabel.setText("" + chosenProduct.getProductPrice());
                     changeLabel.setText("");
-                    pickedItemTypeLabel.setText(newValue.getProductType());
-                    pickedItemPriceLabel.setText("" + newValue.getProductPrice());
+                    pickedItemTypeLabel.setText(chosenProduct.getProductType());
+                    pickedItemPriceLabel.setText("" + chosenProduct.getProductPrice());
 
                     // activate buttons
                     insertButton.setDisable(false);
@@ -123,12 +134,13 @@ public class SimulatorScene extends Application {
         cancelButton.setOnAction(new EventHandler<ActionEvent>() {
             public void handle(ActionEvent event) {
 
-                // return inserted money
+                // return inserted money = clear tempUserMoneyInsertion array
+                Arrays.fill(tempUserMoneyInsertion, 0);
+
                 pickedItemTypeLabel.setText("");
                 pickedItemPriceLabel.setText("");
 
                 listView.setDisable(false);
-
 
             }
         });
@@ -199,6 +211,8 @@ public class SimulatorScene extends Application {
 
                                 // TODO: Decrease product from products list
 
+                                // add inserted money to wallet
+                                Wallet.getInstance().addDenominations(tempUserMoneyInsertion);
 
                                 // reset fields and labels for next user
                                 insertedMoneyValue = 0d;
@@ -210,19 +224,36 @@ public class SimulatorScene extends Application {
                                 listView.setDisable(false);
 
                                 // no change, give product, make buttons states react properly
-                                messageLabel.setText(SUCCESS_NO_CHANGE);
+                                messageLabel.setText(SUCCESS_BUY);
 
                                 cancelButton.setDisable(true);
                                 insertButton.setDisable(true);
                                 break;
                             case -1:
 
-                                insertedMoneyLabel.setText("0");
-                                neededMoneyLabel.setText("");
-                                listView.setDisable(false);
+                                ChangeCalculator changeCalculator = new ChangeCalculator();
+
+                                // before calculation change, add inserted money, may help
+                                Wallet.getInstance().addDenominations(tempUserMoneyInsertion);
+
+                                // add inserted money to wallet and calculate + give change
+                                if (changeCalculator.canGiveChange(Double.parseDouble(changeLabel.getText()), Wallet.getInstance().getDenominations())) {
+
+                                    // TODO: Decrease product from products list
+
+                                    // give product, make buttons states react properly
+                                    messageLabel.setText(SUCCESS_BUY);
+
+                                    insertedMoneyLabel.setText("0");
+                                    neededMoneyLabel.setText("");
+                                    listView.setDisable(false);
+
+                                } else {
+                                    messageLabel.setText(CAN_NOT_GIVE_CHANGE);
+                                    Wallet.getInstance().subDenominations(tempUserMoneyInsertion);
+                                }
 
 
-                                System.out.println("give change");
                         }
 
 
@@ -239,42 +270,27 @@ public class SimulatorScene extends Application {
 
     }
 
+
     // get previous value of inserted money label and add to it new value
     private void setInsertedMoneyLabel(String insertedMoneyString) {
         insertedMoneyValue = Double.parseDouble(insertedMoneyLabel.getText()) +
                 Double.parseDouble(insertedMoneyString);
 
-        insertedMoneyLabel.setText(String.format("%.2f", insertedMoneyValue));
+        insertedMoneyLabel.setText(String.format("%.1f", insertedMoneyValue));
 
     }
 
     private void setNeededMoneyLabel(String insertedMoneyString) {
-
-        // if user inserted first denomination
-        // get product price and sub inserted money
-//        if ("".equals(neededMoneyLabel.getText())) {
-//
-//            neededMoneyValue = Double.parseDouble(pickedItemPriceLabel.getText().replace('$', Character.MIN_VALUE))
-//                    - Double.parseDouble(insertedMoneyString);
-
-            //neededMoneyLabel.setText(String.format("%.2f", neededMoneyValue));
-       // } else {
-
-            //get previous value and sub inserted money from it
-            neededMoneyValue = Double.parseDouble(neededMoneyLabel.getText()) - Double.parseDouble(insertedMoneyString);
-
-       // }
+        neededMoneyValue = Double.parseDouble(neededMoneyLabel.getText()) - Double.parseDouble(insertedMoneyString);
 
         // if there is enough money - set responsible label
         if (neededMoneyValue < 0) {
-            changeLabel.setText(String.format("%.2f", Math.abs(neededMoneyValue)) );
+            changeLabel.setText(String.format("%.1f", Math.abs(neededMoneyValue)));
             neededMoneyLabel.setText("0");
             insertButton.setDisable(true);
         } else {
-            neededMoneyLabel.setText(String.format("%.2f", neededMoneyValue));
+            neededMoneyLabel.setText(String.format("%.1f", neededMoneyValue));
         }
-
-
     }
 
     private boolean checkIsDenominationCorrect(String text) {
@@ -300,8 +316,14 @@ public class SimulatorScene extends Application {
 
     private void populateProductsIntoListView() {
 
-        listView.setItems(FXCollections.observableList(JSONParser.parseJson("")));
+        // Json string from HTTP request here
+        listView.setItems(FXCollections.observableList(JSONParser.getProductsArrayList("")));
 
+    }
+
+    private void populateWalletWithDenominations() {
+        // Json string from HTTP request here
+        Wallet.getInstance().init(JSONParser.getDenominationsArray(""));
     }
 
     private boolean isProductChosen() {
