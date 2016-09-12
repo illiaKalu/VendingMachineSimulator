@@ -6,9 +6,11 @@ import com.dev.illiaka.Utils.ChangeCalculator;
 import com.dev.illiaka.Utils.JSONParser;
 import com.dev.illiaka.Wallet;
 import javafx.application.Application;
+import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
@@ -18,14 +20,9 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.stage.Stage;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.TimerTask;
 
 /**
  * Created by sonicmaster on 09.09.16.\
@@ -41,6 +38,7 @@ public class SimulatorScene extends Application {
     private static final String PRIMARY_STAGE_TITLE = "Vending Machine Simulator";
     private static final String NO_MORE_PRODUCTS = "Sorry, product is gone";
     private static final String CAN_NOT_GIVE_CHANGE = "Sorry, change can not be given";
+    private final ObservableList<ProductsController> products;
     // temp variable to handle chosen product
     volatile ProductsController chosenProduct;
     private ListView<ProductsController> listView;
@@ -62,13 +60,13 @@ public class SimulatorScene extends Application {
     private Double insertedMoneyValue;
     private Double neededMoneyValue;
 
-    public static void main(String[] args) {
-
-        launch(args);
-
+    public SimulatorScene(ObservableList<ProductsController> products) {
+        this.products = products;
     }
 
+
     public void start(Stage primaryStage) throws Exception {
+        System.out.println("start");
 
         // primary Scene implementation
         // markup file location
@@ -87,22 +85,14 @@ public class SimulatorScene extends Application {
         primaryStage.show();
 
         findControls(scene);
-
-        // start "loading" view here and wait until Http and parser finish
-
-        // products list initialization
-        // should be in other thread
-        populateProductsIntoListView();
-
-        // wallet initialization
-        // should be in other thread
-        populateWalletWithDenominations();
-
+        populateProductsIntoListView(scene);
 
         listView.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<ProductsController>() {
             public void changed(ObservableValue<? extends ProductsController> observable, ProductsController oldValue, ProductsController newValue) {
 
                 chosenProduct = newValue;
+
+                System.out.println("AMOUNT  -  " + chosenProduct.getProductAmount());
 
                 // check product availability
                 if (chosenProduct.getProductAmount() < 1) {
@@ -197,7 +187,6 @@ public class SimulatorScene extends Application {
                         // calculate how much money user need to add and set responsible Label
                         setNeededMoneyLabel(insertedMoney);
 
-
                         // check is inserted money enough
                         // 0 - no change, give product
                         // 1 - user inserted not enough money
@@ -209,7 +198,8 @@ public class SimulatorScene extends Application {
                                 break;
                             case 0:
 
-                                // TODO: Decrease product from products list
+                                // decrease product amount
+                                chosenProduct.setProductAmount(chosenProduct.getProductAmount() - 1);
 
                                 // add inserted money to wallet
                                 Wallet.getInstance().addDenominations(tempUserMoneyInsertion);
@@ -239,7 +229,9 @@ public class SimulatorScene extends Application {
                                 // add inserted money to wallet and calculate + give change
                                 if (changeCalculator.canGiveChange(Double.parseDouble(changeLabel.getText()), Wallet.getInstance().getDenominations())) {
 
-                                    // TODO: Decrease product from products list
+                                    // decrease product amount
+                                    chosenProduct.setProductAmount(chosenProduct.getProductAmount() - 1);
+
 
                                     // give product, make buttons states react properly
                                     messageLabel.setText(SUCCESS_BUY);
@@ -252,22 +244,16 @@ public class SimulatorScene extends Application {
                                     messageLabel.setText(CAN_NOT_GIVE_CHANGE);
                                     Wallet.getInstance().subDenominations(tempUserMoneyInsertion);
                                 }
-
-
                         }
-
-
                     } else {
                         messageLabel.setText(DOMINATION_IS_NOT_CORRECT);
                     }
-
                 } else {
                     messageLabel.setText(PICK_ITEM_FIRST);
                 }
 
             }
         });
-
     }
 
 
@@ -300,8 +286,6 @@ public class SimulatorScene extends Application {
 
     private void findControls(Scene scene) {
 
-        listView = (ListView<ProductsController>) scene.lookup("#products_listview");
-
         cancelButton = (Button) scene.lookup("#cancel_button");
         insertButton = (Button) scene.lookup("#insert_money_button");
         insertedMoneyTextField = (TextField) scene.lookup("#inserted_money_textField");
@@ -314,16 +298,11 @@ public class SimulatorScene extends Application {
 
     }
 
-    private void populateProductsIntoListView() {
+    private void populateProductsIntoListView(Scene scene) {
 
-        // Json string from HTTP request here
-        listView.setItems(FXCollections.observableList(JSONParser.getProductsArrayList("")));
+        listView = (ListView<ProductsController>) scene.lookup("#products_listview");
+        listView.setItems(products);
 
-    }
-
-    private void populateWalletWithDenominations() {
-        // Json string from HTTP request here
-        Wallet.getInstance().init(JSONParser.getDenominationsArray(""));
     }
 
     private boolean isProductChosen() {
