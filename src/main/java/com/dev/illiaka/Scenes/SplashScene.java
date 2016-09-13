@@ -1,6 +1,7 @@
 package com.dev.illiaka.Scenes;
 
 import com.dev.illiaka.ProductsController;
+import com.dev.illiaka.Utils.HttpRequestReadJSON;
 import com.dev.illiaka.Utils.JSONParser;
 import com.dev.illiaka.Wallet;
 import javafx.animation.FadeTransition;
@@ -34,7 +35,7 @@ import java.util.concurrent.ExecutionException;
 public class SplashScene extends Application {
 
     public static final String SPLASH_IMAGE =
-            "http://fxexperience.com/wp-content/uploads/2010/06/logo.png";
+            "https://mir-s3-cdn-cf.behance.net/project_modules/disp/e70f9144231595.56076c81e910f.png";
 
     private Pane splashLayout;
     private ProgressBar loadProgress;
@@ -54,7 +55,7 @@ public class SplashScene extends Application {
         ));
         loadProgress = new ProgressBar();
         loadProgress.setPrefWidth(SPLASH_WIDTH - 20);
-        progressText = new Label("Will find friends for peanuts . . .");
+        progressText = new Label("");
         splashLayout = new VBox();
         splashLayout.getChildren().addAll(splash, loadProgress, progressText);
         progressText.setAlignment(Pos.CENTER);
@@ -80,14 +81,18 @@ public class SplashScene extends Application {
             @Override
             protected ObservableList<ProductsController> call() throws InterruptedException {
 
-                ObservableList<ProductsController> products =  FXCollections.observableArrayList(JSONParser.getProductsArrayList(""));
+                // get json string with products and denominations
+                String jsonData = HttpRequestReadJSON.getJSON();
 
-                Wallet.getInstance().init(JSONParser.getDenominationsArray(""));
+                // parse json and fill product list
+                ObservableList<ProductsController> products =  FXCollections.observableArrayList(JSONParser.getProductsArrayList(jsonData));
+
+                // fill machine wallet with denominations from JSON
+                Wallet.getInstance().init(JSONParser.getDenominationsArray(jsonData));
+
                 updateMessage("Loading products . . .");
                 //updateProgress(i + 1, availableFriends.size());
 
-
-                Thread.sleep(800);
                 updateMessage("All products loaded.");
 
                 return products;

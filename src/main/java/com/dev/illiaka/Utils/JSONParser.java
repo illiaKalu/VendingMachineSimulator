@@ -1,6 +1,8 @@
 package com.dev.illiaka.Utils;
 
 import com.dev.illiaka.ProductsController;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,22 +12,25 @@ import java.util.List;
  */
 public class JSONParser {
 
-
     /**
      * @param jsonString
      * @return ArrayList with products from JSON
      */
     public static ArrayList<ProductsController> getProductsArrayList(String jsonString) {
 
-        ArrayList arr = new ArrayList<ProductsController>(5);
+        ArrayList productsListToReturn = new ArrayList<ProductsController>(5);
 
-        arr.add(new ProductsController("cola 3", 1.2d, 3));
-        arr.add(new ProductsController("fanta 1", 1.1d, 1));
-        arr.add(new ProductsController("pepsi 2", 5d, 2));
-        arr.add(new ProductsController("sprite0", 4.3d, 0));
-        arr.add(new ProductsController("mirinda5", 3.8d, 5));
+        JSONObject rootJSONObj = new JSONObject(jsonString);
 
-        return arr;
+        JSONArray productsArray = rootJSONObj.getJSONArray("products");
+
+        for (int i = 0; i < productsArray.length(); i++) {
+            productsListToReturn.add(new ProductsController(productsArray.getJSONObject(i).get("type").toString(),
+                    productsArray.getJSONObject(i).optDouble("price"),
+                    productsArray.getJSONObject(i).optInt("amount", 0)));
+        }
+
+        return productsListToReturn;
     }
 
     /**
@@ -40,6 +45,16 @@ public class JSONParser {
      * [5] - 0.1&
      */
     public static int[] getDenominationsArray(String jsonString) {
-        return new int[]{0, 0, 0, 0, 1, 1};
+
+        int[] denominationToReturn = new int[6];
+
+        JSONObject rootJSONObj = new JSONObject(jsonString);
+
+        JSONArray denominationsArray = rootJSONObj.getJSONArray("denominations");
+
+        for (int i = 0; i < denominationToReturn.length; i++) {
+            denominationToReturn[i] = denominationsArray.optInt(i, 0);
+        }
+        return denominationToReturn;
     }
 }
