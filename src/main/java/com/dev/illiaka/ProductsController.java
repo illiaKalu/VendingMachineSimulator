@@ -17,31 +17,6 @@ public class ProductsController extends HBox {
     private Double productPrice;
     private int productAmount;
 
-    public void setProductAmount(int amount) {
-        this.productAmount = amount;
-    }
-    public int getProductAmount(){
-        return this.productAmount;
-    }
-
-    public String getProductType() {
-        return productType;
-    }
-
-    public void setProductType(String type) {
-        this.productType = type;
-    }
-
-    public Double getProductPrice() {
-        return productPrice;
-    }
-
-    public void setProductPrice(Double price) {
-        this.productPrice = price;
-    }
-
-
-
     public ProductsController(String productType, Double productPrice, int productAmount) {
         super();
 
@@ -59,5 +34,29 @@ public class ProductsController extends HBox {
 
 
         this.getChildren().addAll(productTypeLabel, productPriceLabel);
+    }
+
+    public int getProductAmount() {
+        return this.productAmount;
+    }
+
+    public void setProductAmount(int amount) {
+        this.productAmount = amount;
+    }
+
+    public String getProductType() {
+        return productType;
+    }
+
+    public void setProductType(String type) {
+        this.productType = type;
+    }
+
+    public Double getProductPrice() {
+        return productPrice;
+    }
+
+    public void setProductPrice(Double price) {
+        this.productPrice = price;
     }
 }

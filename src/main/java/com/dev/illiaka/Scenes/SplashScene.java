@@ -36,13 +36,11 @@ public class SplashScene extends Application {
 
     public static final String SPLASH_IMAGE =
             "https://mir-s3-cdn-cf.behance.net/project_modules/disp/e70f9144231595.56076c81e910f.png";
-
+    private static final int SPLASH_WIDTH = 676;
+    private static final int SPLASH_HEIGHT = 227;
     private Pane splashLayout;
     private ProgressBar loadProgress;
     private Label progressText;
-
-    private static final int SPLASH_WIDTH = 676;
-    private static final int SPLASH_HEIGHT = 227;
 
     public static void main(String[] args) {
         launch(args);
@@ -85,7 +83,7 @@ public class SplashScene extends Application {
                 String jsonData = HttpRequestReadJSON.getJSON();
 
                 // parse json and fill product list
-                ObservableList<ProductsController> products =  FXCollections.observableArrayList(JSONParser.getProductsArrayList(jsonData));
+                ObservableList<ProductsController> products = FXCollections.observableArrayList(JSONParser.getProductsArrayList(jsonData));
 
                 // fill machine wallet with denominations from JSON
                 Wallet.getInstance().init(JSONParser.getDenominationsArray(jsonData));
@@ -99,7 +97,7 @@ public class SplashScene extends Application {
             }
         };
 
-        showSplash(primaryStage,loadAndParseProductsTask, () -> {
+        showSplash(primaryStage, loadAndParseProductsTask, () -> {
             try {
                 showMainStage(loadAndParseProductsTask.get());
             } catch (Exception e) {
@@ -148,16 +146,16 @@ public class SplashScene extends Application {
         initStage.show();
     }
 
-    public interface InitCompletionHandler {
-        void complete() throws ExecutionException, InterruptedException;
-    }
-
-
     private void showMainStage(ObservableList<ProductsController> products) throws Exception {
 
         SimulatorScene mainScene = new SimulatorScene(products);
         mainScene.start(new Stage());
 
 
+    }
+
+
+    public interface InitCompletionHandler {
+        void complete() throws ExecutionException, InterruptedException;
     }
 }

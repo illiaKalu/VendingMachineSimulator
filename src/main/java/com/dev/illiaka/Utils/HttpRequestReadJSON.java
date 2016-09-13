@@ -16,7 +16,7 @@ import java.net.URL;
  */
 public class HttpRequestReadJSON {
 
-    public static String getJSON(){
+    public static String getJSON() {
 
         final String USER_AGENT = "Mozilla/5.0";
 

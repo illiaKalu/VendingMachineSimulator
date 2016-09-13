@@ -3,13 +3,10 @@ package com.dev.illiaka.Scenes;
 
 import com.dev.illiaka.ProductsController;
 import com.dev.illiaka.Utils.ChangeCalculator;
-import com.dev.illiaka.Utils.JSONParser;
 import com.dev.illiaka.Wallet;
 import javafx.application.Application;
-import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;

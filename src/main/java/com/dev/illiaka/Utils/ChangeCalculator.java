@@ -16,7 +16,7 @@ public class ChangeCalculator {
         // [5] - 0.1 denomination
         int[] givenDenominations = new int[6];
 
-        int[] denominations = new int[] {500,200,100,50,20,10};
+        int[] denominations = new int[]{500, 200, 100, 50, 20, 10};
 
 
         // 4.3$ = 43
@@ -25,16 +25,16 @@ public class ChangeCalculator {
 
         int changeInPennies = (int) change;
 
-        for (int i = 0; i < denominations.length; i++){
-            int count = Math.min(changeInPennies/denominations[i], denominationsAmount[i]);
-            changeInPennies -= denominations[i]*count;
-            givenDenominations[i]=count;
+        for (int i = 0; i < denominations.length; i++) {
+            int count = Math.min(changeInPennies / denominations[i], denominationsAmount[i]);
+            changeInPennies -= denominations[i] * count;
+            givenDenominations[i] = count;
         }
 
-        if (changeInPennies == 0){
+        if (changeInPennies == 0) {
             Wallet.getInstance().subDenominations(givenDenominations);
             return true;
-        }else {
+        } else {
             return false;
         }
 
