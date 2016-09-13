@@ -6,7 +6,6 @@ import com.dev.illiaka.Utils.JSONParser;
 import com.dev.illiaka.Wallet;
 import javafx.animation.FadeTransition;
 import javafx.application.Application;
-import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
