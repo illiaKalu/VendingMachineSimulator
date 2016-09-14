@@ -9,6 +9,9 @@ import java.util.List;
 
 /**
  * Created by sonicmaster on 11.09.16.
+ * class parse JSON and returns arrayList of products and denomitnations array
+ *
+ * @see ProductsController
  */
 public class JSONParser {
 

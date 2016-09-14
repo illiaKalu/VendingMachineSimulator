@@ -6,7 +6,13 @@ import javafx.scene.layout.Priority;
 
 /**
  * Created by sonicmaster on 11.09.16.
+ * class represents product with its fields and methods
+ * It is also extends HBox for be able to fill listView
+ *
+ * @see javafx.scene.layout.HBox
+ * @see javafx.scene.control.ListView
  */
+
 public class ProductsController extends HBox {
 
     private Label productTypeLabel = new Label();
@@ -48,15 +54,8 @@ public class ProductsController extends HBox {
         return productType;
     }
 
-    public void setProductType(String type) {
-        this.productType = type;
-    }
-
     public Double getProductPrice() {
         return productPrice;
     }
 
-    public void setProductPrice(Double price) {
-        this.productPrice = price;
-    }
 }

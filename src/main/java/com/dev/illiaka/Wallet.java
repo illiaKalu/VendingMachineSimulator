@@ -1,15 +1,13 @@
 package com.dev.illiaka;
 
-import com.sun.deploy.util.ArrayUtil;
-
 /**
  * Created by sonicmaster on 09.09.16.
+ * class represents machine denominations
  */
 public class Wallet {
 
     private static volatile Wallet instance;
     private int[] denominations = new int[6];
-    private Double money;
 
     private Wallet() {
     }
@@ -21,18 +19,6 @@ public class Wallet {
 
     public int[] getDenominations() {
         return denominations;
-    }
-
-    public void setDenominations(int[] denominations) {
-        this.denominations = denominations;
-    }
-
-    public Double getMoney() {
-        return money;
-    }
-
-    public void setMoney(Double money) {
-        this.money = money;
     }
 
     public void init(int[] denominations) {

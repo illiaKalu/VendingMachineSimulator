@@ -1,7 +1,5 @@
 package com.dev.illiaka.Utils;
 
-import org.json.JSONObject;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -12,7 +10,7 @@ import java.net.URL;
 
 /**
  * Created by sonicmaster on 13.09.16.
- * class read JSON from Google App Engine
+ * class read JSON String from Google App Engine
  */
 public class HttpRequestReadJSON {
 
@@ -51,7 +49,6 @@ public class HttpRequestReadJSON {
                 in.close();
 
             }
-
 
         } catch (MalformedURLException e) {
             e.printStackTrace();

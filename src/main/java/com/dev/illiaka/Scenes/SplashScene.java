@@ -30,10 +30,13 @@ import java.util.concurrent.ExecutionException;
 
 /**
  * Created by sonicmaster on 12.09.16.
+ * <p>
+ * class represents splashscreen, witch load data from GAE
+ * and starts main scene
  */
 public class SplashScene extends Application {
 
-    public static final String SPLASH_IMAGE =
+    private static final String SPLASH_IMAGE =
             "https://mir-s3-cdn-cf.behance.net/project_modules/disp/e70f9144231595.56076c81e910f.png";
     private static final int SPLASH_WIDTH = 676;
     private static final int SPLASH_HEIGHT = 227;
@@ -127,9 +130,7 @@ public class SplashScene extends Application {
 
                 try {
                     initCompletionHandler.complete();
-                } catch (ExecutionException e) {
-                    e.printStackTrace();
-                } catch (InterruptedException e) {
+                } catch (ExecutionException | InterruptedException e) {
                     e.printStackTrace();
                 }
             }
@@ -154,7 +155,7 @@ public class SplashScene extends Application {
     }
 
 
-    public interface InitCompletionHandler {
+    private interface InitCompletionHandler {
         void complete() throws ExecutionException, InterruptedException;
     }
 }
